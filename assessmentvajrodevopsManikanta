@@ -1,0 +1,136 @@
+Section 1: Python Automation Script 
+Problem Statement: 
+Create a Python script that continuously monitors Docker containers on 
+a host and triggers an alert if any container’s CPU usage exceeds a specified 
+threshold (e.g., 80%). The script should: 
+Connect to Docker: Use the Docker SDK for Python to list running containers. 
+Monitor Resources: For each container, check its CPU usage. 
+Threshold & Alert: If a container’s CPU usage exceeds the threshold, log the 
+event and simulate an alert. 
+Robustness: Include proper error handling, logging, and clean exit 
+mechanisms. 
+Modularity: Write code in a modular way with functions or classes, and 
+include inline comments and a README section with instructions to run the 
+script.
+
+Answer:
+
+import docker
+import time
+import logging
+
+# Configure logging
+logging.basicConfig(
+    filename='docker_monitor.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def get_running_containers():
+    """Retrieve running Docker containers."""
+    try:
+        client = docker.from_env()
+        return client.containers.list()
+    except Exception as e:
+        logging.error(f"Error retrieving containers: {e}")
+        return []
+
+def get_cpu_usage(container):
+    """Calculate CPU usage percentage for a container."""
+    try:
+        stats = container.stats(stream=False)
+        cpu_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
+        system_delta = stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage']
+        num_cpus = len(stats['cpu_stats']['cpu_usage'].get('percpu_usage', [])) or 1
+        return round((cpu_delta / system_delta) * num_cpus * 100.0, 2) if system_delta > 0 else 0.0
+    except Exception as e:
+        logging.error(f"Failed to get CPU usage for {container.name}: {e}")
+        return None
+
+def monitor_containers(threshold=80.0, interval=5):
+    """Monitor running containers and log alerts if CPU usage exceeds threshold."""
+    try:
+        while True:
+            containers = get_running_containers()
+            for container in containers:
+                cpu_usage = get_cpu_usage(container)
+                if cpu_usage is not None:
+                    logging.info(f"Container: {container.name} | CPU Usage: {cpu_usage}%")
+                    if cpu_usage > threshold:
+                        logging.warning(f"ALERT! {container.name} exceeded CPU threshold with {cpu_usage}% usage.")
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        logging.info("Monitoring stopped by user.")
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+
+if __name__ == "__main__":
+    monitor_containers()
+
+
+
+
+Section 2: Bash Log Monitoring Script 
+Problem Statement: 
+Develop a Bash script that monitors a specified log file for error patterns 
+(e.g., "ERROR" or "CRITICAL"). The script should: 
+Real-Time Monitoring: Continuously watch the log file. 
+Error Counting: Count the occurrences of the error pattern within a moving 
+time window. 
+Alerting: If the count exceeds a threshold (e.g., 10 errors in 5 minutes), trigger 
+an alert by, for example, printing a warning message or sending a notification. 
+Resilience: Gracefully handle log rotation or the log file being temporarily 
+unavailable. 
+Documentation: Include comments and usage instructions at the top of the 
+Script
+
+Answer:
+#!/bin/bash
+
+# Log Monitoring Script
+# Description: Monitors a specified log file for occurrences of error patterns
+# like "ERROR" or "CRITICAL" and triggers an alert if the count exceeds a threshold
+# within a specified time frame.
+
+# Configuration Variables
+LOG_FILE="/var/log/syslog"  # Path of the log file to monitor
+ERROR_PATTERNS="ERROR|CRITICAL"  # Error keywords to look for
+TIME_WINDOW=300  # Time window in seconds (e.g., 300s = 5 minutes)
+ERROR_THRESHOLD=10  # Error count threshold to trigger alert
+ALERT_LOG_FILE="log_monitor_alerts.log"  # File to log detected errors
+
+# Ensure the alert log file exists
+touch "$ALERT_LOG_FILE"
+
+# Function to monitor the log file in real-time
+monitor_log() {
+    tail -Fn0 "$LOG_FILE" | while read -r line; do
+        if [[ "$line" =~ $ERROR_PATTERNS ]]; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') [ALERT] $line" >> "$ALERT_LOG_FILE"
+        fi
+    done
+}
+
+# Function to analyze error occurrences within the time window
+check_errors() {
+    while true; do
+        local recent_errors=$(awk -v t="$(date --date="-$TIME_WINDOW seconds" +"%Y-%m-%d %H:%M:%S")" '$0 > t' "$ALERT_LOG_FILE" | wc -l)
+        
+        if [[ "$recent_errors" -ge "$ERROR_THRESHOLD" ]]; then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') CRITICAL ALERT: $recent_errors errors detected in the past $TIME_WINDOW seconds."
+        fi
+        sleep $TIME_WINDOW
+    done
+}
+
+# Start monitoring and analysis in background
+monitor_log &
+LOG_MONITOR_PID=$!
+check_errors &
+ERROR_CHECK_PID=$!
+
+# Handle script termination
+trap "kill $LOG_MONITOR_PID $ERROR_CHECK_PID; echo 'Log monitoring stopped.'; exit" SIGINT SIGTERM
+
+# Keep script running
+wait
