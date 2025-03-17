@@ -1,0 +1,275 @@
+In Kubernetes, kubectl is your go-to command-line tool. From creating and deleting pods to debugging and scaling deployments, kubectl is the primary way to manage all Kubernetes resources. This cheat sheet covers essential commands and explanations, so you can confidently work with Kubernetes clusters.
+
+TL, DR;
+
+Command	Description
+kubectl get pods	Lists all pods in the current namespace.
+kubectl get pods --all-namespaces	Lists all pods across all namespaces.
+kubectl get all	Displays all Kubernetes objects in the current namespace.
+kubectl create deployment <name> --image=<image>	Creates a new deployment with the specified name and image.
+kubectl delete pod <pod_name>	Deletes a specific pod by its name.
+kubectl describe pod <pod_name>	Shows detailed information about a specific pod.
+kubectl logs <pod_name>	Allows you to view logs for a specific pod.
+kubectl exec -it <pod_name> -- /bin/bash	Executes a command inside a running pod (e.g., opens a bash shell).
+kubectl scale deployment <deployment_name> --replicas=<number>	Scales a deployment to a specified number of replicas.
+kubectl port-forward <pod_name> <local_port>:<pod_port>	Forwards a local port to a port on a pod for easier access.
+kubectl apply -f <filename>.yaml	Creates or updates resources defined in a YAML file.
+kubectl get nodes	Lists all nodes in the cluster.
+kubectl describe node <node_name>	Displays detailed information about a specific node.
+kubectl get namespaces	Lists all namespaces in the cluster.
+kubectl config use-context <context_name>	Switches to a specific context defined in your kubeconfig file.
+kubectl version	Shows the version information of the kubectl client and the Kubernetes server.
+kubectl get svc	Lists all services in the current namespace.
+kubectl get deployments	Displays all deployments in the current namespace.
+kubectl get replicasets	Lists all ReplicaSets in the current namespace.
+kubectl get daemonsets	Lists all DaemonSets in the current namespace.
+kubectl get statefulsets	Lists all StatefulSets in the current namespace.
+kubectl edit deployment <deployment_name>	Opens an existing deployment for editing in your default editor.
+kubectl rollout status deployment/<deployment_name>	Checks the status of a deployment rollout.
+kubectl rollout undo deployment/<deployment_name>	Rolls back to the previous version of a deployment.
+kubectl get configmaps	Lists all ConfigMaps in the current namespace.
+kubectl get serviceaccounts	Displays all service accounts in the current namespace.
+kubectl top pods	Shows metrics for pods, including CPU and memory usage.
+kubectl top nodes	Displays metrics for nodes, including CPU and memory usage.
+kubectl get persistentvolumes	Lists all PersistentVolumes in the cluster.
+Core kubectl Commands
+The most foundational commands are essential for everyday tasks.
+
+List Resources
+Start by listing resources with kubectl get. You can view all Kubernetes resources, whether pods, services, or nodes.
+
+# List all pods, services, and nodes across all namespaces
+kubectl get pods --all-namespaces
+kubectl get svc        # shorthand for services
+kubectl get nodes
+Describe Resources
+Use kubectl describe to view metadata, events, and configuration details of resources, which is incredibly useful for debugging.
+
+# Describe a specific pod in a namespace
+kubectl describe pod <pod_name> -n <namespace-name>
+Delete Resources
+kubectl delete removes resources—be careful, as it’s irreversible. Specify resource types, namespaces, or names to avoid unintended deletions.
+
+# Delete a specific pod in a namespace
+kubectl delete pod <pod_name> -n <namespace-name>
+Understanding Kubernetes Metrics Server: Your Go-to Guide | Last9
+Learn how the Kubernetes Metrics Server helps monitor resource usage like CPU and memory, ensuring smooth cluster performance and scalability.
+
+Last9
+
+Using Selectors with field-selector
+Select specific pods based on attributes like name, status, or labels.
+
+# Get all running pods based on their status
+kubectl get pods --field-selector=status.phase=Running
+Working with Pods
+Pods are the smallest deployable units and a core component of Kubernetes objects. Managing and debugging pods is fundamental to understanding application behavior.
+
+1. Retrieve Pod Logs
+Logs are invaluable for tracking application performance and error handling.
+
+# Get logs for a specific pod in a namespace
+kubectl logs <pod_name> -n <namespace-name>
+2. Running Commands Inside Pods
+Run interactive commands to troubleshoot inside a container.
+
+# Execute commands within a pod's container
+kubectl exec -it <pod_name> -- /bin/bash
+3. Monitor CPU and Memory Usage
+Get real-time data on CPU and memory usage with kubectl top. This command works for both nodes and pods.
+
+# Monitor CPU and memory usage for a specific pod
+kubectl top pod <pod_name> -n <namespace-name>
+kubectl exec: Commands, Examples, and Best Practices | Last9
+Learn essential commands, examples, and best practices for using kubectl exec to troubleshoot and manage your Kubernetes applications.
+
+Last9
+Last9
+
+Deployments and Rollouts
+Deployments manage workloads by scaling applications, applying updates, and rolling back changes.
+
+Creating a Deployment
+Quickly set up a deployment using a container image.
+
+# Create a deployment with a specified container image
+kubectl create deployment <deployment_name> --image=<container_image>
+Manage Rollouts
+Rollouts help update images and configuration settings seamlessly.
+
+# Update the container image in a deployment and check the rollout status
+kubectl set image deployment/<deployment_name> <container_name>=<new_image>
+kubectl rollout status deployment/<deployment_name>
+Scaling Deployments
+kubectl scale adjusts the number of replicas in a deployment, ensuring that applications can handle changes in demand.
+
+# Scale a deployment to the desired number of replicas
+kubectl scale deployment <deployment_name> --replicas=<desired_number>
+Namespace Management
+Namespaces in Kubernetes are like organizing folders on your computer. They allow you to separate environments and isolate resources.
+
+Create a Namespace
+Organize resources by creating namespaces for staging, testing, and production environments.
+
+# Create a new namespace
+kubectl create namespace <namespace-name>
+List All Namespaces
+Get an overview of all namespaces.
+
+# List all namespaces in the cluster
+kubectl get namespaces
+Switch Namespace Context
+Use the kubectl config command to set a default namespace context, simplifying commands.
+
+# Set the current context to a specific namespace
+kubectl config set-context --current --namespace=<namespace-name>
+Kubernetes Monitoring with Prometheus and Grafana | Last9
+A guide to help you implement Prometheus and Grafana in your Kubernetes cluster
+
+Last9
+
+Advanced Configurations and Resource Management
+Efficiently manage cluster settings and resource configurations with commands that allow inspection and updates on the fly.
+
+View Cluster Configurations
+Display your active kubeconfig file that shows context, cluster information, and namespace preferences.
+
+# View the active kubeconfig settings
+kubectl config view
+Edit Resources Directly
+Use kubectl edit to make changes directly to resources. This command opens a text editor with the current YAML configuration.
+
+# Edit a specific pod's configuration in a namespace
+kubectl edit pod <pod_name> -n <namespace-name>
+Annotate and Label Resources
+Adding labels and annotations can be helpful for identification and filtering.
+
+Add a label:
+
+# Add a label to a specific pod
+kubectl label pod <pod_name> env=production
+Add an annotation:
+
+# Add an annotation to a specific pod
+kubectl annotate pod <pod_name> description="Backend pod for service A"
+Cluster Management
+Here’s how to gather information and monitor your Kubernetes environment to keep the cluster in shape.
+
+Cluster Info
+Quickly check API server endpoints and basic information.
+
+# Display basic information about the cluster
+kubectl cluster-info
+Persistent Volumes
+Persistent storage is essential for data that needs to outlast the lifecycle of a pod.
+
+# Get a list of persistent volumes in the cluster
+kubectl get persistentvolumes
+Mark Nodes as Schedulable/Unschedulable
+During maintenance, you can mark nodes as unschedulable to prevent new workloads from being assigned.
+
+# Mark a node as unschedulable
+kubectl cordon <node_name>
+
+# Mark a node as schedulable again
+kubectl uncordon <node_name>
+How to restart Kubernetes Pods with kubectl | Last9
+A simple reckoner on how to restart a Kubernetes pod with kubectl
+
+Last9
+Last9
+
+Monitoring and Port Forwarding
+Use advanced commands to get resource data and test internal services.
+
+Forward a Pod’s Port
+Expose a pod’s port to your local machine for testing or debugging.
+
+# Forward a pod's port to a local port
+kubectl port-forward <pod_name> <local_port>:<remote_port> -n <namespace-name>
+Monitor Resource Metrics
+To see resource usage, such as CPU and memory, for nodes or pods, use kubectl top.
+
+# Monitor resource metrics for nodes
+kubectl top node
+JSON and YAML Output
+Display Kubernetes resource output in YAML or JSON formats, useful for saving configurations to files.
+
+# Get a list of pods in YAML format
+kubectl get pods -o yaml
+Interacting with the Kubernetes API Server
+Explore available resources in the Kubernetes API.
+
+List API Resources
+Display all available resource types in the API.
+
+# List all resource types in the Kubernetes API
+kubectl api-resources
+Filter Output with JSONPath
+Use JSONPath to pull specific fields from resource output.
+
+# Get the names of all pods using JSONPath
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+Conclusion
+And there you have it! This cheat sheet is your handy guide to tackling Kubernetes tasks with ease. Remember, the best way to get comfortable with Kubernetes is to jump in and start experimenting.
+
+🤝
+If you’d like to continue the conversation, join our community on Discord! We have a dedicated channel where you can chat with other developers about your specific use case.
+FAQs
+What is in kubectl commands?
+kubectl commands encompass various operations you can perform on Kubernetes resources, including managing pods, services, deployments, namespaces, and more. Some common commands include kubectl get, kubectl create, kubectl delete, and kubectl describe.
+
+How to practice Kubernetes commands?
+You can practice Kubernetes commands by setting up a local cluster using tools like Minikube or Kind (Kubernetes in Docker). These environments allow you to experiment with kubectl commands without affecting a live production environment.
+
+What is the command to get all running pods?
+To list all running pods across all namespaces, you can use:
+
+kubectl get pods --all-namespaces --field-selector=status.phase=Running
+Which command is used to list all the Kubernetes objects?
+To list all Kubernetes objects within a specific namespace, use:
+
+kubectl get all -n <namespace-name>
+To list all objects in all namespaces, add the --all-namespaces flag:
+
+kubectl get all --all-namespaces
+Can I Use Docker Without Kubernetes?
+Yes, you can use Docker independently of Kubernetes. Docker is a platform for developing, shipping, and running applications inside containers, while Kubernetes is a container orchestration tool that helps manage and scale containerized applications.
+
+Who Are These Kubectl Cheat Sheet Commands For?
+These kubectl commands are for developers, system administrators, and DevOps professionals who work with Kubernetes to manage containerized applications, whether in development, testing, or production environments.
+
+Do You Want a Career in DevOps?
+If you're interested in automation, infrastructure management, and bridging development and operations, pursuing a career in DevOps can be rewarding. Proficiency in tools like kubectl and understanding Kubernetes can significantly enhance your qualifications.
+
+What is a StatefulSet?
+A StatefulSet is a Kubernetes workload API object designed for managing stateful applications. It provides guarantees about the ordering and uniqueness of pod deployment, making it suitable for applications requiring stable identities, persistent storage, and ordered deployments.
+
+What is a Kubernetes Manifest File?
+A Kubernetes manifest file is a YAML file that defines the desired state of a Kubernetes object, such as a pod, deployment, or service. It specifies configurations, including resource specifications, labels, and containers.
+
+What are DaemonSets?
+A DaemonSet ensures that a copy of a specific pod runs on all or a subset of nodes in a Kubernetes cluster. They are typically used for background tasks like logging and monitoring, ensuring that necessary services are always running on all designated nodes.
+
+How can I create a deployment in Kubernetes using kubectl?
+To create a deployment, use the following command:
+
+kubectl create deployment <deployment_name> --image=<container_image>
+What is the kubectl command to describe a specific node in a Kubernetes cluster?
+To get detailed information about a specific node, use:
+
+kubectl describe node <node_name>
+What is the kubectl command to scale deployment in Kubernetes?
+To scale a deployment to a desired number of replicas, use:
+
+kubectl scale deployment <deployment_name> --replicas=<desired_number>
+What is the difference between a Deployment and a StatefulSet in Kubernetes?
+A Deployment is used for stateless applications, where pods are interchangeable, while a StatefulSet is used for stateful applications that require stable network identities and persistent storage. StatefulSets maintain the order and uniqueness of pods, while Deployments do not.
+
+What is the purpose of a Service Account in Kubernetes?
+A Service Account provides an identity for processes that run in a Pod. It is used to grant permissions and manage access to the Kubernetes API and other resources, enhancing security within your cluster.
+
+What is a ConfigMap in Kubernetes?
+A ConfigMap is a key-value store used to manage configuration data separately from application code. You can use ConfigMaps to store non-confidential data that your applications need at runtime.
+
+What does the kubectl config use-context command do?
